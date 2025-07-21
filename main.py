@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-import openai
+from openai import OpenAI
 import os
 import logging
 from dotenv import load_dotenv
@@ -19,15 +19,22 @@ app = FastAPI()
 api_key = os.getenv("OPENAI_API_KEY")
 if api_key:
     logger.info("OpenAI API key found and loaded successfully")
-    openai.api_key = api_key
+    client = OpenAI(api_key=api_key)
+    logger.info("OpenAI client initialized successfully")
 else:
     logger.error("OpenAI API key not found in environment variables")
     logger.error("Please check if OPENAI_API_KEY is set in your .env file")
+    client = None
 
 def get_ai_news():
     logger.info("Attempting to fetch AI news from OpenAI")
+
+    if client is None:
+        logger.error("OpenAI client not initialized - API key missing")
+        return "OpenAI API key not configured"
+
     try:
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": "Give me one current AI news headline from today. Just the headline, nothing else."}
